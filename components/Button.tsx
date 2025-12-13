@@ -14,18 +14,22 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyle = "rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyle = "rounded-2xl font-bold tracking-wide transition-all duration-300 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center";
   
   const sizes = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-3"
+    sm: "px-4 py-2 text-sm",
+    md: "px-6 py-4 text-base"
   };
 
   const variants = {
-    primary: "bg-primary text-white shadow-md hover:bg-green-900",
-    secondary: "bg-accent text-green-900 shadow-sm hover:bg-yellow-500",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-    outline: "border-2 border-primary text-primary bg-transparent hover:bg-green-50"
+    // Gradient Green
+    primary: "bg-gradient-to-r from-primary to-green-700 text-white shadow-lg shadow-green-900/20 hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 border border-transparent",
+    // Bright Yellow/Gold
+    secondary: "bg-gradient-to-r from-yellow-400 to-yellow-500 text-green-950 shadow-lg shadow-yellow-500/20 hover:shadow-xl hover:shadow-yellow-500/30 hover:-translate-y-0.5 border border-transparent",
+    // Red
+    danger: "bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 shadow-sm",
+    // Outline Green
+    outline: "border-2 border-primary/20 text-primary bg-white hover:border-primary hover:bg-green-50 shadow-sm"
   };
 
   return (
