@@ -1,0 +1,7 @@
+{
+  "name": "Manakrishi",
+  "description": "Agritech drone spraying booking platform for farmers.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
