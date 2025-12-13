@@ -59,6 +59,20 @@ export const createBooking = async (booking: Omit<Booking, 'id' | 'status' | 'cr
   });
 };
 
+export const updateBooking = async (bookingId: string, updates: Partial<Booking>): Promise<void> => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const all = getStoredBookings();
+            const index = all.findIndex(b => b.id === bookingId);
+            if (index !== -1) {
+                all[index] = { ...all[index], ...updates };
+                localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(all));
+            }
+            resolve();
+        }, 800);
+    });
+};
+
 export const getBookings = async (user: User): Promise<Booking[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {

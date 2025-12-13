@@ -36,4 +36,4 @@ export interface Booking {
   scheduledDate?: number; // timestamp
 }
 
-export type Language = 'en' | 'hi' | 'te';
+export type Language = 'en' | 'te';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, UserRole, Booking, BookingStatus, Language, Coordinates } from './types';
 import { TRANSLATIONS, CROPS, PESTICIDES } from './constants';
-import { mockLogin, logout, getUser, createBooking, getBookings, updateBookingStatus } from './services/mockService';
+import { mockLogin, logout, getUser, createBooking, getBookings, updateBookingStatus, updateBooking } from './services/mockService';
 import { Button } from './components/Button';
 import { Input, Select } from './components/Input';
 
@@ -12,66 +12,57 @@ const UserIcon = ({ className = "w-6 h-6" }) => <svg className={className} fill=
 const MapPinIcon = () => <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 const BatteryIcon = () => <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>;
 const SignalIcon = () => <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" /></svg>;
+const EditIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>;
 
 // --- Components ---
 
 const DroneHUD = ({ user, t }: { user: User | null, t: any }) => (
     <div className="relative h-72 w-full bg-gray-900 overflow-hidden shadow-2xl rounded-b-3xl">
-        {/* Background Image - Aerial Farm View */}
         <div 
             className="absolute inset-0 bg-cover bg-center opacity-80"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')" }}
         />
-        
-        {/* HUD Overlays */}
         <div className="absolute inset-0 drone-overlay">
-            {/* Top Bar Data */}
             <div className="absolute top-4 left-4 right-4 flex justify-between text-xs font-mono text-green-400">
                 <div className="flex items-center bg-black/50 px-2 py-1 rounded border border-green-500/30">
-                    <span className="animate-pulse mr-2">●</span> REC
+                    <span className="animate-pulse mr-2">●</span> LIVE
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center"><BatteryIcon /> 84%</div>
                     <div className="flex items-center"><SignalIcon /> 5G</div>
                 </div>
             </div>
-
-            {/* Center Reticle */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                  <div className="w-48 h-48 border border-green-400/30 rounded-full flex items-center justify-center relative">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-ping absolute"></div>
                     <div className="w-40 h-40 border border-white/10 rounded-full"></div>
-                    {/* Crosshairs */}
                     <div className="absolute w-4 h-[1px] bg-green-400 -left-2"></div>
                     <div className="absolute w-4 h-[1px] bg-green-400 -right-2"></div>
                     <div className="absolute h-4 w-[1px] bg-green-400 -top-2"></div>
                     <div className="absolute h-4 w-[1px] bg-green-400 -bottom-2"></div>
                  </div>
             </div>
-
-            {/* Scanning Line */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-green-400/50 shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-scan"></div>
-
-            {/* Bottom Data */}
             <div className="absolute bottom-4 left-4 text-white">
                 <h2 className="text-xl font-bold drop-shadow-md">{t.welcome}, {user?.name?.split(' ')[0]}</h2>
                 <p className="text-xs font-mono text-green-300 bg-black/40 px-2 py-1 rounded inline-block mt-1">
                     {t.drone_status}
                 </p>
             </div>
-            
              <div className="absolute bottom-4 right-4 text-right">
                 <p className="text-xs font-mono text-white/80">{t.weather}</p>
-                <p className="text-xs font-mono text-green-400">ALT: 45m • SPD: 12m/s</p>
             </div>
         </div>
     </div>
 );
 
+type ViewState = 'LOGIN' | 'FARMER_HOME' | 'FARMER_BOOK' | 'FARMER_PROFILE' | 'BOOKING_DETAIL' | 'ADMIN_HOME';
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [language, setLanguage] = useState<Language>('en');
-  const [view, setView] = useState<'LOGIN' | 'FARMER_HOME' | 'FARMER_BOOK' | 'ADMIN_HOME'>('LOGIN');
+  const [view, setView] = useState<ViewState>('LOGIN');
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   // Load user on mount
   useEffect(() => {
@@ -91,16 +82,12 @@ export default function App() {
   };
 
   const toggleLanguage = () => {
-    setLanguage(prev => {
-        if (prev === 'en') return 'hi';
-        if (prev === 'hi') return 'te';
-        return 'en';
-    });
+    setLanguage(prev => prev === 'en' ? 'te' : 'en');
   };
 
   const LangButton = (
     <button onClick={toggleLanguage} className="text-xs font-bold bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-full border border-white/40 transition-all backdrop-blur-sm">
-        {language === 'en' ? '🇺🇸 EN' : language === 'hi' ? '🇮🇳 हिन्दी' : '🇮🇳 తెలుగు'}
+        {language === 'en' ? '🇺🇸 EN' : '🇮🇳 తెలుగు'}
     </button>
   );
 
@@ -132,18 +119,28 @@ export default function App() {
     };
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-green-900 to-green-800">
-        <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8 mx-4">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+      <div className="flex flex-col items-center justify-end md:justify-center min-h-screen bg-black relative">
+        <div 
+            className="absolute inset-0 bg-cover bg-center z-0"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1625246333195-09d9b63bd716?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-0"></div>
+
+        <div className="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl shadow-2xl p-8 mx-4 z-10 transition-all duration-500 animate-[scan_0.5s_ease-out]">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                 <LeafIcon className="w-8 h-8" />
                 {t.app_name}
             </h1>
-            <button onClick={toggleLanguage} className="text-xs font-bold bg-gray-100 text-primary px-3 py-1 rounded-full border border-gray-200">
-                {language === 'en' ? 'EN' : language === 'hi' ? 'HI' : 'TE'}
+            <button onClick={toggleLanguage} className="text-xs font-bold bg-green-100 text-primary px-3 py-1 rounded-full">
+                {language === 'en' ? 'EN' : 'TE'}
             </button>
           </div>
-          <h2 className="text-xl font-semibold mb-6 text-gray-800">{t.login_title}</h2>
+          
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">{t.login_title}</h2>
+            <p className="text-gray-500 text-sm">{t.login_subtitle}</p>
+          </div>
           
           {step === 1 ? (
             <div className="space-y-4">
@@ -161,7 +158,7 @@ export default function App() {
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
               />
-              <Button fullWidth onClick={sendOtp} disabled={loading} className="mt-2">
+              <Button fullWidth onClick={sendOtp} disabled={loading} className="mt-4 shadow-lg shadow-green-200">
                 {loading ? t.loading : t.send_otp}
               </Button>
             </div>
@@ -177,7 +174,7 @@ export default function App() {
                 value={otp} 
                 onChange={(e) => setOtp(e.target.value)} 
               />
-              <Button fullWidth onClick={verifyOtp} disabled={loading}>
+              <Button fullWidth onClick={verifyOtp} disabled={loading} className="shadow-lg shadow-green-200">
                 {loading ? t.loading : t.verify_otp}
               </Button>
               <button 
@@ -188,20 +185,18 @@ export default function App() {
               </button>
             </div>
           )}
-          
-          <div className="mt-8 text-xs text-center text-gray-400 border-t pt-4">
-            Manakrishi Secure Login
-          </div>
         </div>
       </div>
     );
   };
 
   const FarmerBookView = () => {
-    const [crop, setCrop] = useState('');
-    const [acres, setAcres] = useState('');
-    const [pesticide, setPesticide] = useState('');
-    const [coords, setCoords] = useState<Coordinates | null>(null);
+    // If editing, preload data
+    const isEditing = !!selectedBooking;
+    const [crop, setCrop] = useState(selectedBooking?.cropType || '');
+    const [acres, setAcres] = useState(selectedBooking?.acres.toString() || '');
+    const [pesticide, setPesticide] = useState(selectedBooking?.pesticide || '');
+    const [coords, setCoords] = useState<Coordinates | null>(selectedBooking?.location || null);
     const [loading, setLoading] = useState(false);
     const [locLoading, setLocLoading] = useState(false);
 
@@ -232,30 +227,43 @@ export default function App() {
             return;
         }
         setLoading(true);
-        await createBooking({
-            userId: user!.id,
-            userPhone: user!.phone,
-            cropType: crop,
-            acres: Number(acres),
-            pesticide,
-            location: coords,
-            locationAddress: '',
-        });
+        
+        if (isEditing && selectedBooking) {
+            await updateBooking(selectedBooking.id, {
+                cropType: crop,
+                acres: Number(acres),
+                pesticide,
+                location: coords
+            });
+            alert(t.success_update);
+        } else {
+            await createBooking({
+                userId: user!.id,
+                userPhone: user!.phone,
+                cropType: crop,
+                acres: Number(acres),
+                pesticide,
+                location: coords,
+                locationAddress: '',
+            });
+            alert(t.success_booking);
+        }
+        
         setLoading(false);
-        alert(t.success_booking);
+        setSelectedBooking(null);
         setView('FARMER_HOME');
     };
 
     const cropOptions = CROPS.map(c => ({ 
         value: c.en, 
-        label: language === 'hi' ? c.hi : language === 'te' ? c.te : c.en 
+        label: language === 'te' ? c.te : c.en 
     }));
 
     const pestOptions = PESTICIDES.map(p => ({ value: p, label: p }));
 
     return (
         <div className="pb-20 bg-gray-50 min-h-screen">
-            <Header title={t.book_service} showBack onBack={() => setView('FARMER_HOME')} />
+            <Header title={isEditing ? t.update_request : t.book_service} showBack onBack={() => { setSelectedBooking(null); setView('FARMER_HOME'); }} />
             <div className="p-5 space-y-6">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <Select label={t.select_crop} options={cropOptions} value={crop} onChange={e => setCrop(e.target.value)} />
@@ -289,8 +297,121 @@ export default function App() {
                 </div>
 
                 <Button fullWidth onClick={handleSubmit} disabled={loading} className="shadow-xl shadow-green-200">
-                    {loading ? t.loading : t.submit_request}
+                    {loading ? t.loading : (isEditing ? t.update_request : t.submit_request)}
                 </Button>
+            </div>
+        </div>
+    );
+  };
+
+  const BookingDetailView = () => {
+    if (!selectedBooking) return null;
+
+    const canEdit = selectedBooking.status === BookingStatus.REQUESTED;
+
+    const handleCancel = async () => {
+        if(confirm('Are you sure you want to cancel?')) {
+            await updateBookingStatus(selectedBooking.id, BookingStatus.CANCELLED);
+            setView('FARMER_HOME');
+        }
+    };
+
+    const handleEdit = () => {
+        setView('FARMER_BOOK');
+    };
+
+    return (
+        <div className="pb-20 bg-gray-50 min-h-screen">
+             <Header title={t.booking_details} showBack onBack={() => setView('FARMER_HOME')} />
+             <div className="p-5 space-y-5">
+                 {/* Status Card */}
+                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Status ID: #{selectedBooking.id.slice(-6)}</span>
+                    <StatusBadge status={selectedBooking.status} t={t} />
+                 </div>
+
+                 {/* Map Placeholder */}
+                 <div className="bg-gray-200 h-48 rounded-2xl relative overflow-hidden shadow-inner">
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
+                        Map View (Coordinates: {selectedBooking.location?.lat.toFixed(4)}, {selectedBooking.location?.lng.toFixed(4)})
+                    </div>
+                 </div>
+
+                 {/* Details */}
+                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <DetailRow label={t.select_crop} value={selectedBooking.cropType} />
+                    <DetailRow label={t.land_size} value={`${selectedBooking.acres} Acres`} />
+                    <DetailRow label={t.select_pesticide} value={selectedBooking.pesticide} />
+                    <DetailRow label="Requested On" value={new Date(selectedBooking.createdAt).toLocaleDateString()} />
+                 </div>
+
+                 {/* Actions */}
+                 {canEdit && (
+                     <div className="flex gap-3">
+                         <Button variant="secondary" fullWidth onClick={handleEdit} className="flex items-center justify-center gap-2">
+                             <EditIcon /> {t.edit}
+                         </Button>
+                         <Button variant="danger" fullWidth onClick={handleCancel}>
+                             {t.cancel_job}
+                         </Button>
+                     </div>
+                 )}
+             </div>
+        </div>
+    );
+  };
+
+  const FarmerProfileView = () => {
+    const [bookings, setBookings] = useState<Booking[]>([]);
+
+    useEffect(() => {
+        if (user) {
+            getBookings(user).then(setBookings);
+        }
+    }, [user]);
+
+    const totalAcres = bookings.reduce((acc, curr) => acc + curr.acres, 0);
+
+    return (
+        <div className="pb-24 bg-gray-50 min-h-screen">
+            <Header title={t.profile} />
+            <div className="p-5 space-y-6">
+                
+                {/* User Card */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-primary mb-4">
+                        <UserIcon className="w-10 h-10" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">{user?.name}</h2>
+                    <p className="text-gray-500">{user?.phone}</p>
+                    <div className="mt-4">
+                        <button onClick={toggleLanguage} className="text-xs font-bold bg-gray-100 text-primary px-4 py-2 rounded-full border border-gray-200">
+                            {language === 'en' ? 'Switch to Telugu (తెలుగు)' : 'Switch to English'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <h3 className="text-3xl font-bold text-primary">{bookings.length}</h3>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">{t.total_bookings}</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <h3 className="text-3xl font-bold text-accent">{totalAcres}</h3>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">{t.acres_covered}</p>
+                    </div>
+                </div>
+
+                <Button variant="outline" fullWidth onClick={handleLogout} className="mt-8 border-red-200 text-red-500 hover:bg-red-50">
+                    {t.logout}
+                </Button>
+            </div>
+
+            {/* Bottom Nav */}
+            <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)] max-w-md mx-auto right-0 z-50">
+                <NavBtn icon={<LeafIcon />} label={t.home} onClick={() => setView('FARMER_HOME')} />
+                <NavBtn icon={<UserIcon />} label={t.profile} active />
             </div>
         </div>
     );
@@ -307,7 +428,12 @@ export default function App() {
                 setLoading(false);
             });
         }
-    }, []);
+    }, [user, view]); // Reload when view changes (e.g. back from edit)
+
+    const handleBookingClick = (b: Booking) => {
+        setSelectedBooking(b);
+        setView('BOOKING_DETAIL');
+    };
 
     return (
         <div className="pb-24 bg-gray-50 min-h-screen">
@@ -319,9 +445,9 @@ export default function App() {
                 <DroneHUD user={user} t={t} />
             </div>
             
-            {/* Quick Action - Overlapping the Drone View */}
+            {/* Quick Action */}
             <div className="px-4 -mt-6 relative z-10">
-                <Button variant="secondary" fullWidth onClick={() => setView('FARMER_BOOK')} className="shadow-lg py-4 border-2 border-white flex justify-center items-center gap-2 text-lg">
+                <Button variant="secondary" fullWidth onClick={() => { setSelectedBooking(null); setView('FARMER_BOOK'); }} className="shadow-lg py-4 border-2 border-white flex justify-center items-center gap-2 text-lg">
                     <span className="text-2xl">+</span> {t.book_service}
                 </Button>
             </div>
@@ -340,7 +466,9 @@ export default function App() {
                             </div>
                         )}
                         {bookings.map(b => (
-                            <BookingCard key={b.id} booking={b} t={t} />
+                            <div key={b.id} onClick={() => handleBookingClick(b)}>
+                                <BookingCard booking={b} t={t} />
+                            </div>
                         ))}
                     </div>
                 )}
@@ -349,8 +477,7 @@ export default function App() {
             {/* Bottom Nav */}
             <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)] max-w-md mx-auto right-0 z-50">
                 <NavBtn icon={<LeafIcon />} label={t.home} active />
-                <NavBtn icon={<ListIcon />} label={t.my_bookings} />
-                <NavBtn icon={<UserIcon />} label={t.profile} onClick={handleLogout} />
+                <NavBtn icon={<UserIcon />} label={t.profile} onClick={() => setView('FARMER_PROFILE')} />
             </div>
         </div>
     );
@@ -380,7 +507,7 @@ export default function App() {
                 <h1 className="text-xl font-bold text-gray-800">{t.admin_panel}</h1>
                 <div className="flex gap-4 items-center">
                     <button onClick={toggleLanguage} className="text-xs font-bold bg-gray-100 text-primary px-3 py-1 rounded-full">
-                         {language === 'en' ? 'EN' : language === 'hi' ? 'HI' : 'TE'}
+                         {language === 'en' ? 'EN' : 'TE'}
                     </button>
                     <button onClick={handleLogout} className="text-red-500 text-sm font-semibold hover:bg-red-50 px-2 py-1 rounded">
                         Exit
@@ -448,6 +575,8 @@ export default function App() {
             {view === 'LOGIN' && <LoginView />}
             {view === 'FARMER_HOME' && <FarmerHomeView />}
             {view === 'FARMER_BOOK' && <FarmerBookView />}
+            {view === 'FARMER_PROFILE' && <FarmerProfileView />}
+            {view === 'BOOKING_DETAIL' && <BookingDetailView />}
             {view === 'ADMIN_HOME' && <AdminHomeView />}
         </div>
     </div>
@@ -455,6 +584,13 @@ export default function App() {
 }
 
 // --- Sub Components ---
+
+const DetailRow = ({ label, value }: { label: string, value: string }) => (
+    <div className="flex justify-between border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+        <span className="text-gray-500">{label}</span>
+        <span className="font-semibold text-gray-800">{value}</span>
+    </div>
+);
 
 const Header: React.FC<{ title: string, showBack?: boolean, onBack?: () => void, rightContent?: React.ReactNode }> = ({ title, showBack, onBack, rightContent }) => (
     <div className="bg-primary p-4 sticky top-0 z-10 flex items-center justify-between text-white shadow-md">
@@ -478,7 +614,7 @@ const NavBtn: React.FC<{ icon: React.ReactNode, label: string, onClick?: () => v
 );
 
 const BookingCard: React.FC<{ booking: Booking, t: any }> = ({ booking, t }) => (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md">
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md cursor-pointer">
         <div>
             <div className="flex items-center gap-2 mb-1">
                 <span className="bg-green-100 text-green-800 p-1.5 rounded-lg"><LeafIcon className="w-4 h-4" /></span>
