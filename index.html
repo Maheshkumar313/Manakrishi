@@ -5,15 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <meta name="theme-color" content="#166534" />
     <title>Manakrishi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
             colors: {
               primary: '#166534', // green-800
               secondary: '#15803d', // green-700
               accent: '#facc15', // yellow-400
+              dark: '#0f172a',
+            },
+            animation: {
+              'scan': 'scan 3s linear infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              scan: {
+                '0%': { transform: 'translateY(0)', opacity: '0.1' },
+                '50%': { opacity: '0.5' },
+                '100%': { transform: 'translateY(200px)', opacity: '0.1' },
+              }
             }
           }
         }
@@ -31,6 +49,10 @@
       }
       body {
         background-color: #f3f4f6;
+        font-family: 'Inter', sans-serif;
+      }
+      .drone-overlay {
+        background: radial-gradient(circle, rgba(22, 101, 52, 0) 60%, rgba(22, 101, 52, 0.4) 100%);
       }
     </style>
   <script type="importmap">
