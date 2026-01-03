@@ -25,12 +25,25 @@
             animation: {
               'scan': 'scan 3s linear infinite',
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fly': 'fly 20s linear infinite',
+              'prop': 'prop 0.1s linear infinite',
             },
             keyframes: {
               scan: {
                 '0%': { transform: 'translateY(0)', opacity: '0.1' },
                 '50%': { opacity: '0.5' },
                 '100%': { transform: 'translateY(200px)', opacity: '0.1' },
+              },
+              fly: {
+                '0%': { transform: 'translateX(-20vw) translateY(50px) scale(0.6) rotate(5deg)', opacity: '0' },
+                '10%': { opacity: '1' },
+                '50%': { transform: 'translateX(50vw) translateY(20px) scale(1) rotate(-2deg)' },
+                '90%': { opacity: '1' },
+                '100%': { transform: 'translateX(120vw) translateY(-50px) scale(0.6) rotate(5deg)', opacity: '0' },
+              },
+              prop: {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' }
               }
             }
           }

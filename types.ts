@@ -34,6 +34,8 @@ export interface Booking {
   status: BookingStatus;
   createdAt: number; // timestamp
   scheduledDate?: number; // timestamp
+  preferredDate?: string; // format: YYYY-MM-DD
+  preferredTime?: string; // format: HH:MM
 }
 
 export type Language = 'en' | 'te';
